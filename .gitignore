@@ -1,0 +1,25 @@
+# ShellLink .gitignore
+
+# SSH keys
+*.pem
+id_*
+!id_*.pub
+
+# Bitwarden session tokens
+.bw-session
+*.session
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Logs
+*.log
