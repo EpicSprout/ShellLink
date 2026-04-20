@@ -207,14 +207,79 @@ sync_ssh_config() {
         git clone --quiet "$REPO_URL" "$SSH_CONFIG_DIR" 2>/dev/null || die "Failed to clone ShellLink repo"
     fi
 
-    # Symlink the config
+    # Build config from template + .env
+    local template_file="$SSH_CONFIG_DIR/ssh-config/config.template"
+    local env_file="$SSH_CONFIG_DIR/ssh-config/.env"
     local source_config="$SSH_CONFIG_DIR/ssh-config/config"
     local target_config="$SSH_DIR/config"
 
-    if [[ ! -f "$source_config" ]]; then
-        warn "No ssh-config/config found in repo, skipping symlink"
+    if [[ ! -f "$template_file" ]]; then
+        warn "No ssh-config/config.template found in repo, skipping"
         return 0
     fi
+
+    if [[ ! -f "$env_file" ]]; then
+        warn "No ssh-config/.env found — copy .env.example to .env and fill in your values"
+        return 0
+    fi
+
+    # Parse .env: collect HOST_<alias>_<PROP>=value into associative arrays
+    declare -A host_props
+    declare -a host_aliases=()
+    local seen_aliases=""
+
+    while IFS= read -r line; do
+        line=$(echo "$line" | xargs)
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        if [[ "$line" =~ ^HOST_([^_]+)_([A-Z_]+)=(.*)$ ]]; then
+            local alias="${BASH_REMATCH[1],,}"  # lowercase
+            local prop="${BASH_REMATCH[2]}"
+            local val="${BASH_REMATCH[3]}"
+            val=$(echo "$val" | xargs)
+            host_props["${alias}__${prop}"]="$val"
+            # Track unique aliases in order
+            if [[ "$seen_aliases" != *"|${alias}|"* ]]; then
+                host_aliases+=("$alias")
+                seen_aliases="${seen_aliases}|${alias}|"
+            fi
+        fi
+    done < "$env_file"
+
+    if [[ ${#host_aliases[@]} -eq 0 ]]; then
+        warn "No HOST_ entries found in .env — nothing to generate"
+        return 0
+    fi
+
+    # Start with template (global defaults)
+    local config_content
+    config_content=$(cat "$template_file")
+
+    # Append each host block
+    for alias in $(printf '%s\n' "${host_aliases[@]}" | sort); do
+        local hostname="${host_props["${alias}__HOSTNAME"]:-}"
+        if [[ -z "$hostname" ]]; then
+            warn "HOST_${alias}: missing HOSTNAME, skipping"
+            continue
+        fi
+
+        local label="${host_props["${alias}__LABEL"]:-$alias}"
+        local port="${host_props["${alias}__PORT"]:-22}"
+        local id_file="${host_props["${alias}__IDENTITY_FILE"]:-~/.ssh/id_ed25519}"
+        local user="${host_props["${alias}__USER"]:-}"
+
+        config_content+=$'\n\n\n'"# ── ${label} ──"
+        config_content+=$'\n'"Host ${alias}"
+        config_content+=$'\n'"    HostName ${hostname}"
+        if [[ -n "$user" ]]; then
+            config_content+=$'\n'"    User ${user}"
+        fi
+        config_content+=$'\n'"    IdentityFile ${id_file}"
+        config_content+=$'\n'"    Port ${port}"
+    done
+
+    # Write generated config
+    echo "$config_content" > "$source_config"
+    success "Generated ssh-config/config (${#host_aliases[@]} host(s))"
 
     if [[ -L "$target_config" ]]; then
         local current_target

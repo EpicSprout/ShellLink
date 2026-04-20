@@ -1,5 +1,9 @@
 # ShellLink .gitignore
 
+# SSH config secrets
+ssh-config/.env
+ssh-config/config
+
 # SSH keys
 *.pem
 id_*

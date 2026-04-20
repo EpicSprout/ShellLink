@@ -208,20 +208,71 @@ function Sync-SSHConfig {
         }
     }
 
-    # Copy the config (Windows doesn't support symlinks without admin)
+    # Build config from template + .env
+    $templateFile = Join-Path $SSHConfigDir "ssh-config\config.template"
+    $envFile = Join-Path $SSHConfigDir "ssh-config\.env"
     $sourceConfig = Join-Path $SSHConfigDir "ssh-config\config"
     $targetConfig = Join-Path $SSHDir "config"
 
-    if (!(Test-Path $sourceConfig)) {
-        Write-ShellLinkWarn "No ssh-config/config found in repo, skipping"
+    if (!(Test-Path $templateFile)) {
+        Write-ShellLinkWarn "No ssh-config/config.template found in repo, skipping"
         return
     }
 
+    if (!(Test-Path $envFile)) {
+        Write-ShellLinkWarn "No ssh-config/.env found — copy .env.example to .env and fill in your values"
+        return
+    }
+
+    # Parse .env into host entries: HOST_<alias>_<PROP>=value
+    $hosts = @{}
+    Get-Content $envFile | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -and -not $line.StartsWith("#") -and $line -match '^HOST_([^_]+)_([A-Z_]+)=(.*)$') {
+            $alias = $Matches[1].ToLower()
+            $prop  = $Matches[2]
+            $val   = $Matches[3].Trim()
+            if (-not $hosts.ContainsKey($alias)) { $hosts[$alias] = @{} }
+            $hosts[$alias][$prop] = $val
+        }
+    }
+
+    if ($hosts.Count -eq 0) {
+        Write-ShellLinkWarn "No HOST_ entries found in .env — nothing to generate"
+        return
+    }
+
+    # Start with template (global defaults)
+    $configContent = (Get-Content $templateFile -Raw).TrimEnd()
+
+    # Append each host block
+    foreach ($alias in $hosts.Keys | Sort-Object) {
+        $h = $hosts[$alias]
+        if (-not $h.ContainsKey("HOSTNAME")) {
+            Write-ShellLinkWarn "HOST_${alias}: missing HOSTNAME, skipping"
+            continue
+        }
+
+        $label = if ($h.ContainsKey("LABEL")) { $h["LABEL"] } else { $alias }
+        $port    = if ($h.ContainsKey("PORT")) { $h["PORT"] } else { "22" }
+        $idFile  = if ($h.ContainsKey("IDENTITY_FILE")) { $h["IDENTITY_FILE"] } else { "~/.ssh/id_ed25519" }
+
+        $configContent += "`n`n`n# ── ${label} ──`nHost $alias`n    HostName $($h["HOSTNAME"])"
+        if ($h.ContainsKey("USER")) { $configContent += "`n    User $($h["USER"])" }
+        $configContent += "`n    IdentityFile $idFile"
+        $configContent += "`n    Port $port"
+    }
+
+    $configContent += "`n"
+
+    # Write generated config
+    $configContent | Set-Content -Path $sourceConfig -NoNewline -Encoding utf8
+    Write-ShellLinkSuccess "Generated ssh-config/config ($($hosts.Count) host(s))"
+
     if (Test-Path $targetConfig) {
         $existingContent = Get-Content $targetConfig -Raw -ErrorAction SilentlyContinue
-        $newContent = Get-Content $sourceConfig -Raw
 
-        if ($existingContent -eq $newContent) {
+        if ($existingContent -eq $configContent) {
             Write-ShellLinkInfo "SSH config already up to date"
             return
         }
