@@ -168,22 +168,22 @@ ShellLink generates your SSH config from a **template** and a **`.env` file**. T
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     ShellLink Bootstrap                  │
+│                     ShellLink Bootstrap                 │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  1. curl/iwr → downloads bootstrap script               │
-│  2. Clones ShellLink repo to temp directory              │
+│  2. Clones ShellLink repo to temp directory             │
 │  3. Installs: bw, git, jq, openssh                      │
-│  4. Authenticates with Bitwarden API key                 │
-│  5. Unlocks vault with master password                   │
-│  6. Retrieves SSH key from vault item                    │
-│  7. Starts ssh-agent                                     │
-│  8. Loads key into agent (+ writes to ~/.ssh/)           │
-│  9. Clones config repo → ~/.ssh-config/                  │
-│ 10. Generates config from template + .env                │
-│ 11. Installs config → ~/.ssh/config                      │
+│  4. Authenticates with Bitwarden API key                │
+│  5. Unlocks vault with master password                  │
+│  6. Retrieves SSH key from vault item                   │
+│  7. Starts ssh-agent                                    │
+│  8. Loads key into agent (+ writes to ~/.ssh/)          │
+│  9. Clones config repo → ~/.ssh-config/                 │
+│ 10. Generates config from template + .env               │
+│ 11. Installs config → ~/.ssh/config                     │
 │                                                         │
-│  Result: ssh myserver ✔                                  │
+  ... Result: ssh myserver ✔
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -289,7 +289,7 @@ MIT — use it, fork it, make it yours.
 
 <div align="center">
 
-**Built with 🔗 by [EpicSprout](https://github.com/EpicSprout)**
+**Built with 💙 by [EpicSprout](https://github.com/EpicSprout)**
 
 *From zero to SSH in one command.*
 
