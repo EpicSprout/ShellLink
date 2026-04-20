@@ -2,12 +2,13 @@
 # ║                    ShellLink SSH Config                     ║
 # ║         Managed by github.com/EpicSprout/ShellLink          ║
 # ╚══════════════════════════════════════════════════════════════╝
-#
+
 # This file is synced via ShellLink. Edit it here and re-run
 # bootstrap to push changes to all your machines.
-#
+
 # Tip: Add host entries below. ShellLink will symlink this
 # to ~/.ssh/config automatically.
+
 
 # ── Global Defaults ──────────────────────────────────────────
 Host *
@@ -17,9 +18,18 @@ Host *
     ServerAliveCountMax 3
     StrictHostKeyChecking ask
 
+
 # ── Personal Home Server: ────────────────────────────────────
 Host homelab
     HostName 192.168.0.23
     User luke
+    IdentityFile ~/.ssh/id_ed25519
+    Port 22
+
+
+# ── Personal Home Server: ────────────────────────────────────
+Host keane
+    HostName 46.250.243.65
+    User root
     IdentityFile ~/.ssh/id_ed25519
     Port 22
