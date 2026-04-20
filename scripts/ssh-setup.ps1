@@ -220,7 +220,27 @@ function Sync-SSHConfig {
     }
 
     if (!(Test-Path $envFile)) {
-        Write-ShellLinkWarn "No ssh-config/.env found — copy .env.example to .env and fill in your values"
+        # No .env found — fall back to using the static config file directly
+        if (Test-Path $sourceConfig) {
+            Write-ShellLinkInfo "No .env found — using static ssh-config/config"
+            $configContent = Get-Content $sourceConfig -Raw
+            if (Test-Path $targetConfig) {
+                $existingContent = Get-Content $targetConfig -Raw -ErrorAction SilentlyContinue
+                if ($existingContent -eq $configContent) {
+                    Write-ShellLinkInfo "SSH config already up to date"
+                    return
+                }
+                if ($existingContent -and $existingContent -notmatch "ShellLink") {
+                    $backup = "$targetConfig.backup.$(Get-Date -Format 'yyyyMMddHHmmss')"
+                    Copy-Item $targetConfig $backup
+                    Write-ShellLinkInfo "Backed up existing config to $backup"
+                }
+            }
+            Copy-Item $sourceConfig $targetConfig -Force
+            Write-ShellLinkSuccess "SSH config installed: $targetConfig"
+            return
+        }
+        Write-ShellLinkWarn "No ssh-config/.env or config found — copy .env.example to .env and fill in your values"
         return
     }
 
