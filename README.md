@@ -27,11 +27,11 @@ It uses **Bitwarden** as your secure key vault — no more copying SSH keys arou
 
 ### What it does:
 
-1. **Installs dependencies** — Bitwarden CLI, OpenSSH, git, jq
+1. **Installs dependencies** — Bitwarden CLI, OpenSSH, git (+ jq on Linux/macOS)
 2. **Authenticates with Bitwarden** — API key login + vault unlock
 3. **Retrieves your SSH key** — from a Secure Note, custom field, or attachment
 4. **Configures ssh-agent** — starts the agent and loads your key
-5. **Syncs SSH config** — clones this repo and links your SSH config
+5. **Syncs SSH config** — clones this repo and generates your SSH config from `.env`
 
 ---
 
@@ -120,22 +120,47 @@ You can either:
 
 ## SSH Config
 
-ShellLink syncs your SSH config from this repo. Edit [`ssh-config/config`](ssh-config/config) to add your hosts:
+ShellLink generates your SSH config from a **template** and a **`.env` file**. This keeps secrets (hostnames, usernames) out of version control.
 
-```ssh-config
-Host myserver
-    HostName 192.168.1.100
-    User youruser
-    IdentityFile ~/.ssh/id_ed25519
-    Port 22
+### How it works
 
-Host github.com
-    HostName github.com
-    User git
-    IdentityFile ~/.ssh/id_ed25519
-```
+1. [`ssh-config/config.template`](ssh-config/config.template) defines global SSH defaults (e.g., `AddKeysToAgent`, `ServerAliveInterval`)
+2. `ssh-config/.env` defines your host entries using `HOST_<alias>_<PROPERTY>=value` variables
+3. At bootstrap time, ShellLink merges the template + `.env` into a generated `ssh-config/config` and installs it to `~/.ssh/config`
 
-Commit and push your changes. Next time ShellLink runs on any machine, it pulls the latest config.
+### Setting up your hosts
+
+1. Copy the example file:
+   ```bash
+   cp ssh-config/.env.example ssh-config/.env
+   ```
+2. Edit `ssh-config/.env` with your real values:
+   ```bash
+   HOST_myserver_LABEL=My Server
+   HOST_myserver_HOSTNAME=192.168.1.100
+   HOST_myserver_USER=youruser
+   HOST_myserver_PORT=22
+   HOST_myserver_IDENTITY_FILE=~/.ssh/id_ed25519
+   ```
+3. To add more hosts, add another `HOST_<alias>_` block:
+   ```bash
+   HOST_github_LABEL=GitHub
+   HOST_github_HOSTNAME=github.com
+   HOST_github_USER=git
+   HOST_github_IDENTITY_FILE=~/.ssh/id_ed25519
+   ```
+
+### `.env` properties
+
+| Property | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `HOSTNAME` | Yes | — | Server address |
+| `USER` | No | — | SSH username |
+| `PORT` | No | `22` | SSH port |
+| `IDENTITY_FILE` | No | `~/.ssh/id_ed25519` | Path to private key |
+| `LABEL` | No | alias name | Comment label in generated config |
+
+> **Note:** `ssh-config/.env` is gitignored — it stays local to each machine. Only `.env.example` and `config.template` are tracked in the repo.
 
 ---
 
@@ -155,7 +180,8 @@ Commit and push your changes. Next time ShellLink runs on any machine, it pulls 
 │  7. Starts ssh-agent                                     │
 │  8. Loads key into agent (+ writes to ~/.ssh/)           │
 │  9. Clones config repo → ~/.ssh-config/                  │
-│ 10. Links ssh-config/config → ~/.ssh/config              │
+│ 10. Generates config from template + .env                │
+│ 11. Installs config → ~/.ssh/config                      │
 │                                                         │
 │  Result: ssh myserver ✔                                  │
 └─────────────────────────────────────────────────────────┘
@@ -179,7 +205,8 @@ ShellLink/
 │   ├── ssh-setup.sh      # SSH agent & key setup (bash)
 │   └── ssh-setup.ps1     # SSH agent & key setup (PowerShell)
 ├── ssh-config/
-│   └── config            # SSH config (synced to ~/.ssh/config)
+│   ├── config.template   # Global SSH defaults (tracked)
+│   └── .env.example      # Example host definitions (tracked)
 ├── .gitignore
 └── README.md
 ```
@@ -235,8 +262,10 @@ SHELLLINK_KEY="ssh-key-work" ./bootstrap.sh --skip-config
 - Windows: Right-click → Properties → Security → Remove all users except yourself
 
 ### SSH config not working
-- Check `~/.ssh/config` exists and points to the right file
+- Ensure `ssh-config/.env` exists and has valid `HOST_` entries
+- Check `~/.ssh/config` exists and was generated correctly
 - Verify permissions: `ls -la ~/.ssh/config` should show `-rw-------`
+- On Linux/macOS, `~/.ssh/config` is symlinked to the generated config; on Windows it's copied
 
 ---
 
