@@ -17,28 +17,9 @@ Host *
     ServerAliveCountMax 3
     StrictHostKeyChecking ask
 
-# ── Example: Personal Server ─────────────────────────────────
-# Host myserver
-#     HostName 192.168.1.100
-#     User youruser
-#     IdentityFile ~/.ssh/id_ed25519
-#     Port 22
-
-# ── Example: GitHub ──────────────────────────────────────────
-# Host github.com
-#     HostName github.com
-#     User git
-#     IdentityFile ~/.ssh/id_ed25519
-
-# ── Example: Work Jumpbox ────────────────────────────────────
-# Host jumpbox
-#     HostName jump.example.com
-#     User admin
-#     IdentityFile ~/.ssh/id_ed25519
-#     ProxyJump none
-#
-# Host internal-server
-#     HostName 10.0.0.5
-#     User deploy
-#     IdentityFile ~/.ssh/id_ed25519
-#     ProxyJump jumpbox
+# ── Personal Home Server: ────────────────────────────────────
+Host homelab
+    HostName 192.168.0.23
+    User luke
+    IdentityFile ~/.ssh/id_ed25519
+    Port 22
