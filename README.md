@@ -10,10 +10,10 @@
 
 **One command. Every machine. SSH ready.**
 
-[![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macOS%20%7C%20windows-blue)]()
-[![License](https://img.shields.io/badge/license-MIT-green)]()
-[![Shell](https://img.shields.io/badge/bash-%23121011.svg?logo=gnu-bash&logoColor=white)]()
-[![PowerShell](https://img.shields.io/badge/PowerShell-%235391FE.svg?logo=powershell&logoColor=white)]()
+[![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macOS%20%7C%20windows-blue)](https://github.com/EpicSprout/ShellLink#quick-start)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/EpicSprout/ShellLink/blob/main/LICENSE)
+[![Shell](https://img.shields.io/badge/bash-%23121011.svg?logo=gnu-bash&logoColor=white)](https://github.com/EpicSprout/ShellLink#linux--macos)
+[![PowerShell](https://img.shields.io/badge/PowerShell-%235391FE.svg?logo=powershell&logoColor=white)](https://github.com/EpicSprout/ShellLink#windows-powershell)
 
 </div>
 
