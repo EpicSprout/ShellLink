@@ -220,9 +220,9 @@ function Sync-SSHConfig {
     }
 
     if (!(Test-Path $envFile)) {
-        # No .env found — fall back to using the static config file directly
+        # No .env found - fall back to using the static config file directly
         if (Test-Path $sourceConfig) {
-            Write-ShellLinkInfo "No .env found — using static ssh-config/config"
+            Write-ShellLinkInfo "No .env found - using static ssh-config/config"
             $configContent = Get-Content $sourceConfig -Raw
             if (Test-Path $targetConfig) {
                 $existingContent = Get-Content $targetConfig -Raw -ErrorAction SilentlyContinue
@@ -240,7 +240,7 @@ function Sync-SSHConfig {
             Write-ShellLinkSuccess "SSH config installed: $targetConfig"
             return
         }
-        Write-ShellLinkWarn "No ssh-config/.env or config found — copy .env.example to .env and fill in your values"
+        Write-ShellLinkWarn "No ssh-config/.env or config found - copy .env.example to .env and fill in your values"
         return
     }
 
@@ -258,7 +258,7 @@ function Sync-SSHConfig {
     }
 
     if ($hosts.Count -eq 0) {
-        Write-ShellLinkWarn "No HOST_ entries found in .env — nothing to generate"
+        Write-ShellLinkWarn "No HOST_ entries found in .env - nothing to generate"
         return
     }
 
@@ -277,7 +277,7 @@ function Sync-SSHConfig {
         $port    = if ($h.ContainsKey("PORT")) { $h["PORT"] } else { "22" }
         $idFile  = if ($h.ContainsKey("IDENTITY_FILE")) { $h["IDENTITY_FILE"] } else { "~/.ssh/id_ed25519" }
 
-        $configContent += "`n`n`n# ── ${label} ──`nHost $alias`n    HostName $($h["HOSTNAME"])"
+        $configContent += "`n`n`n# -- ${label} --`nHost $alias`n    HostName $($h["HOSTNAME"])"
         if ($h.ContainsKey("USER")) { $configContent += "`n    User $($h["USER"])" }
         $configContent += "`n    IdentityFile $idFile"
         $configContent += "`n    Port $port"

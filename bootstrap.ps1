@@ -26,7 +26,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# ── Help ─────────────────────────────────────────────────────
+# -- Help -----------------------------------------------------
 if ($Help) {
     Write-Host @"
 
@@ -51,7 +51,7 @@ Environment Variables:
     return
 }
 
-# ── Determine script location / temp clone ───────────────────
+# -- Determine script location / temp clone -------------------
 $ShellLinkDir = ""
 $TempClone = ""
 
@@ -63,7 +63,7 @@ if (Test-Path $commonPath) {
 } elseif (Test-Path "$env:USERPROFILE\.ssh-config\scripts\common.ps1") {
     $ShellLinkDir = "$env:USERPROFILE\.ssh-config"
 } else {
-    # Bootstrapping from iwr | iex — clone to temp
+    # Bootstrapping from iwr | iex - clone to temp
     $TempClone = Join-Path $env:TEMP "ShellLink_$(Get-Random)"
     $ShellLinkDir = $TempClone
 
@@ -94,11 +94,11 @@ if (Test-Path $commonPath) {
 . "$ShellLinkDir\scripts\bw-auth.ps1"
 . "$ShellLinkDir\scripts\ssh-setup.ps1"
 
-# ── Resolve parameters ───────────────────────────────────────
+# -- Resolve parameters ---------------------------------------
 $ItemName = if ($Key) { $Key } elseif ($env:SHELLLINK_KEY) { $env:SHELLLINK_KEY } else { "ssh-key" }
 $Mode = if ($AgentOnly) { "agent" } elseif ($env:SHELLLINK_MODE) { $env:SHELLLINK_MODE } else { "disk" }
 
-# ── Main Bootstrap Flow ─────────────────────────────────────
+# -- Main Bootstrap Flow --------------------------------------
 function Start-ShellLink {
     Show-ShellLinkBanner
 
@@ -156,15 +156,15 @@ function Start-ShellLink {
             Sync-SSHConfig
         }
 
-        # ── Done ─────────────────────────────────────────────
+        # -- Done ---------------------------------------------
         $elapsed = [math]::Round(((Get-Date) - $startTime).TotalSeconds)
 
         Write-Host ""
-        Write-Host "  ╔══════════════════════════════════════════════════╗" -ForegroundColor Green
-        Write-Host "  ║                                                  ║" -ForegroundColor Green
-        Write-Host "  ║        ShellLink setup complete!                 ║" -ForegroundColor Green
-        Write-Host "  ║                                                  ║" -ForegroundColor Green
-        Write-Host "  ╚══════════════════════════════════════════════════╝" -ForegroundColor Green
+        Write-Host "  +==================================================+" -ForegroundColor Green
+        Write-Host "  |                                                  |" -ForegroundColor Green
+        Write-Host "  |        ShellLink setup complete!                 |" -ForegroundColor Green
+        Write-Host "  |                                                  |" -ForegroundColor Green
+        Write-Host "  +==================================================+" -ForegroundColor Green
         Write-Host ""
 
         Write-ShellLinkInfo "Completed in ${elapsed}s"
