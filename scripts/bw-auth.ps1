@@ -10,6 +10,12 @@ $ErrorActionPreference = "Stop"
 function Connect-Bitwarden {
     Show-ShellLinkHeader "Bitwarden Authentication"
 
+    # Prevent first-run bw warning about missing config directory.
+    $bwConfigDir = Join-Path $env:APPDATA "Bitwarden CLI"
+    if (!(Test-Path $bwConfigDir)) {
+        New-Item -ItemType Directory -Path $bwConfigDir -Force | Out-Null
+    }
+
     # Check current status
     $statusJson = & bw status 2>$null | ConvertFrom-Json -ErrorAction SilentlyContinue
     $status = if ($statusJson) { $statusJson.status } else { "unauthenticated" }

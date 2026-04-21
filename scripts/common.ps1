@@ -4,6 +4,10 @@
 # Shared functions for all ShellLink PowerShell scripts.
 
 $ErrorActionPreference = "Stop"
+# In PowerShell 7+, native commands writing to stderr can be promoted to Error records
+# when ErrorActionPreference is Stop. ShellLink handles native command failures via
+# exit codes, so keep stderr non-terminating for compatibility.
+$PSNativeCommandUseErrorActionPreference = $false
 
 # -- Colors & Logging -----------------------------------------
 function Write-ShellLinkInfo    { Write-Host "  i  " -ForegroundColor Cyan -NoNewline; Write-Host $args }
