@@ -17,16 +17,16 @@ function Connect-Bitwarden {
     }
 
     # Check current status
-    $statusJson = & bw status 2>$null | ConvertFrom-Json -ErrorAction SilentlyContinue
+    $statusRaw = & bw status 2>$null
+    $statusJson = $null
+    if ($statusRaw) {
+        $statusJson = $statusRaw | ConvertFrom-Json -ErrorAction SilentlyContinue
+    }
     $status = if ($statusJson) { $statusJson.status } else { "unauthenticated" }
 
     if ($status -eq "unlocked") {
         Write-ShellLinkInfo "Vault is already unlocked"
-        $script:BwSession = & bw unlock --raw 2>$null
-        if ($script:BwSession) {
-            $env:BW_SESSION = $script:BwSession
-            return
-        }
+        return
     }
 
     if ($status -eq "unauthenticated") {
@@ -65,7 +65,12 @@ function Connect-Bitwarden {
         Exit-WithError "Master password is required"
     }
 
-    $script:BwSession = ($masterPassword | & bw unlock --raw 2>$null)
+    $env:BW_PASSWORD = $masterPassword
+    try {
+        $script:BwSession = & bw unlock --raw --passwordenv BW_PASSWORD 2>$null
+    } finally {
+        Remove-Item Env:BW_PASSWORD -ErrorAction SilentlyContinue
+    }
     if ($LASTEXITCODE -ne 0 -or -not $script:BwSession) {
         Exit-WithError "Failed to unlock vault. Check your master password."
     }
